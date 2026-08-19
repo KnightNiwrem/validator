@@ -38,5 +38,21 @@ function compareHmac(
         .map((k) => `${k}=${data[k]}`)
         .join("\n");
 
-    return hash === hmacSha256Hex(secretKey, dataCheckString);
+    return compareHashes(hash, hmacSha256Hex(secretKey, dataCheckString));
+}
+
+/** timing-safe string equals */
+function compareHashes(expected: string, actual: string) {
+    const encoder = new TextEncoder();
+    const expectedBytes = encoder.encode(expected);
+    const actualBytes = encoder.encode(actual);
+    if (expectedBytes.length !== actualBytes.length) {
+        return false;
+    }
+    let hasDifference = 0;
+    // always iterate all bytes
+    for (let i = 0; i < actualBytes.length; i++) {
+        hasDifference |= expectedBytes[i] ^ actualBytes[i];
+    }
+    return hasDifference === 0;
 }
