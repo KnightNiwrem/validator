@@ -2,16 +2,6 @@ import { hmacSha256, hmacSha256Hex, sha256 } from "./deps.deno.ts";
 
 export type Payload = Record<string, string | number | undefined>;
 
-const payloadKeys = [
-    "id",
-    "hash",
-    "auth_date",
-    "username",
-    "last_name",
-    "photo_url",
-    "first_name",
-];
-
 export function checkSignature(token: string, { hash, ...data }: Payload) {
     const secretKey = sha256(token);
     if (!hash) return false;
@@ -31,9 +21,7 @@ function compareHmac(
 ) {
     const dataCheckString = Object.keys(data)
         // only the keys we care about and not undefined
-        .filter((k) =>
-            payloadKeys.includes(k) && typeof data[k] !== "undefined"
-        )
+        .filter((k) => typeof data[k] !== "undefined")
         .sort()
         .map((k) => `${k}=${data[k]}`)
         .join("\n");
