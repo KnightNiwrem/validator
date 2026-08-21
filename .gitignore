@@ -22,3 +22,8 @@ package-lock.json
 
 # Build output
 out/
+
+# Test coverage
+test/cov_profile/
+test/coverage/
+coverage.lcov

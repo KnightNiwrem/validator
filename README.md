@@ -93,3 +93,9 @@ if (await checkSignature(token, payload, { maxAgeSeconds: 300 })) {
 ```
 
 All validation functions accept the optional `maxAgeSeconds` setting to prevent replaying old authorization data. When enabled, validation also fails if `auth_date` is missing, malformed, or in the future. Omit the setting to validate only the signature without checking the `auth_date`.
+
+### A note on duplicate keys
+
+A query string can carry the same key more than once, and readers disagree about which value wins: `params.get("user")` returns the first occurrence, while iterating the parameters yields the last. Data signed by Telegram never contains duplicate keys, so both `validateWebAppData` and the third-party validator reject any `URLSearchParams` object that has them. Without this check, someone could prepend a forged copy of a signed field, pass validation on the trailing value, and have your code read the forged leading one.
+
+`checkSignature` takes a plain object, which cannot hold duplicate keys in the first place. If you build that object from a query string yourself, reject duplicates before you do.

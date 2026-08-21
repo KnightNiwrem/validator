@@ -442,3 +442,107 @@ Deno.test("third-party validation supports maxAgeSeconds", async () => {
         "historical data",
     );
 });
+
+function duplicated(initData: URLSearchParams, key: string, value: string) {
+    const params = new URLSearchParams();
+    params.append(key, value);
+    for (const [name, existing] of initData) params.append(name, existing);
+    return params;
+}
+
+Deno.test("rejects Web App data with duplicate keys", async () => {
+    const valid = await signedWebAppData(1700000000);
+    assert(await validateWebAppData(TOKEN, valid), "unmodified data");
+
+    for (
+        const [name, key, value] of [
+            ["forged leading value", "query_id", "forged"],
+            [
+                "repeated identical value",
+                "query_id",
+                "AAHdF6IQAAAAAN0XohDhrOrc",
+            ],
+            ["empty leading value", "query_id", ""],
+            ["duplicate auth_date", "auth_date", "1"],
+            ["duplicate hash", "hash", "0".repeat(64)],
+            ["duplicate __proto__", "__proto__", "polluted"],
+        ]
+    ) {
+        assertEquals(
+            await validateWebAppData(TOKEN, duplicated(valid, key, value)),
+            false,
+            name,
+        );
+    }
+});
+
+Deno.test("rejects duplicate keys regardless of position", async () => {
+    const valid = await signedWebAppData(1700000000);
+
+    const trailing = new URLSearchParams(valid);
+    trailing.append("query_id", "forged");
+
+    assertEquals(
+        await validateWebAppData(
+            TOKEN,
+            duplicated(valid, "query_id", "forged"),
+        ),
+        false,
+        "leading duplicate",
+    );
+    assertEquals(
+        await validateWebAppData(TOKEN, trailing),
+        false,
+        "trailing duplicate",
+    );
+});
+
+Deno.test("rejects duplicate keys that URLSearchParams decodes alike", async () => {
+    const valid = await signedWebAppData(1700000000);
+    const encoded = new URLSearchParams(
+        `%71uery_id=forged&${valid.toString()}`,
+    );
+
+    assertEquals([...encoded.keys()][0], "query_id", "decoded key");
+    assertEquals(await validateWebAppData(TOKEN, encoded), false);
+});
+
+Deno.test("rejects third-party data with duplicate keys", async () => {
+    const valid = thirdPartyInitData();
+    assert(
+        await validateWebAppDataThirdParty(THIRD_PARTY_BOT_ID, valid),
+        "unmodified data",
+    );
+
+    for (
+        const [name, key, value] of [
+            ["forged user", "user", '{"id":1}'],
+            ["duplicate signature", "signature", "forged"],
+            ["duplicate hash", "hash", "0".repeat(64)],
+        ]
+    ) {
+        assertEquals(
+            await validateWebAppDataThirdParty(
+                THIRD_PARTY_BOT_ID,
+                duplicated(valid, key, value),
+            ),
+            false,
+            name,
+        );
+    }
+});
+
+Deno.test("duplicate keys do not pollute the prototype", async () => {
+    const polluted = new URLSearchParams();
+    polluted.append("__proto__", '{"polluted":true}');
+    for (const [name, value] of await signedWebAppData(1700000000)) {
+        polluted.append(name, value);
+    }
+
+    assertEquals(await validateWebAppData(TOKEN, polluted), false);
+    assertEquals(
+        ({} as Record<string, unknown>).polluted,
+        undefined,
+        "Object.prototype untouched",
+    );
+});

@@ -1,10 +1,21 @@
 {
     "lock": false,
+    "tasks": {
+        "check": "deno check --allow-import src/mod.ts",
+        "test": "deno test --allow-import ./test/",
+        "dev": "deno fmt && deno lint && deno task test && deno task check",
+        "coverage": "rm -rf ./test/cov_profile && deno task test --coverage=./test/cov_profile && deno coverage --lcov --output=./coverage.lcov ./test/cov_profile"
+    },
     "fmt": {
         "indentWidth": 4,
         "proseWrap": "preserve"
     },
-    "exclude": ["./node_modules/", "./out/", "./package-lock.json"],
+    "exclude": [
+        "./node_modules/",
+        "./out/",
+        "./package-lock.json",
+        "./test/cov_profile"
+    ],
     "imports": {
         "@std/assert": "jsr:@std/assert@^1.0.19"
     }

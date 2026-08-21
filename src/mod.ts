@@ -60,7 +60,9 @@ export async function validateWebAppData(
     initData: URLSearchParams,
     options: ValidationOptions = {},
 ) {
-    const { hash, ...data } = Object.fromEntries(initData.entries());
+    const payload = toPayload(initData);
+    if (!payload) return false;
+    const { hash, ...data } = payload;
     const expected = hexToBytes(hash);
     if (!expected) return false;
     const secretKey = await hmacSha256(WEB_APP_DATA, token);
@@ -88,9 +90,9 @@ export async function validateWebAppDataThirdParty(
     options: ThirdPartyValidationOptions = {},
 ) {
     const environment = options.environment ?? "prod";
-    const { hash: _, signature, ...data } = Object.fromEntries(
-        initData.entries(),
-    );
+    const payload = toPayload(initData);
+    if (!payload) return false;
+    const { hash: _, signature, ...data } = payload;
     const signatureBytes = base64UrlToBytes(signature);
     if (!signatureBytes) return false;
 
@@ -104,6 +106,27 @@ export async function validateWebAppDataThirdParty(
     );
     if (!valid) return false;
     return validateMaxAge(data.auth_date, options.maxAgeSeconds);
+}
+
+/**
+ * Convert `initData` into a payload, rejecting duplicate keys.
+ *
+ * A `URLSearchParams` object can hold several values for the same key. Reading
+ * it back disagrees about which one wins: `initData.get(key)` returns the first
+ * value, while `Object.fromEntries` keeps the last. Anyone able to prepend a
+ * forged duplicate could therefore sign only the trailing value and still have
+ * the calling code read the forged leading one. Telegram never sends duplicate
+ * keys, so they are rejected outright.
+ */
+function toPayload(initData: URLSearchParams) {
+    const seen = new Set<string>();
+    for (const key of initData.keys()) {
+        if (seen.has(key)) return undefined;
+        seen.add(key);
+    }
+    // `Object.fromEntries` defines own properties, so a `__proto__` key cannot
+    // reach the prototype and is treated alike on Deno and Node.
+    return Object.fromEntries(initData.entries());
 }
 
 function validateMaxAge(
