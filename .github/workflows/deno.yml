@@ -100,4 +100,4 @@ jobs:
             - name: Collect coverage
               uses: codecov/codecov-action@v7 # upload the report on Codecov
               with:
-                  files: ./coverage.lcov
+                  files: ./test/cov_profile/lcov.info
