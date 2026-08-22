@@ -60,6 +60,7 @@ export async function validateWebAppData(
     initData: URLSearchParams,
     options: ValidationOptions = {},
 ) {
+    if (hasDuplicateKeys(initData)) return false;
     const { hash, ...data } = Object.fromEntries(initData.entries());
     const expected = hexToBytes(hash);
     if (!expected) return false;
@@ -87,6 +88,7 @@ export async function validateWebAppDataThirdParty(
     initData: URLSearchParams,
     options: ThirdPartyValidationOptions = {},
 ) {
+    if (hasDuplicateKeys(initData)) return false;
     const environment = options.environment ?? "prod";
     const { hash: _, signature, ...data } = Object.fromEntries(
         initData.entries(),
@@ -104,6 +106,15 @@ export async function validateWebAppDataThirdParty(
     );
     if (!valid) return false;
     return validateMaxAge(data.auth_date, options.maxAgeSeconds);
+}
+
+function hasDuplicateKeys(params: URLSearchParams) {
+    const keys = new Set<string>();
+    for (const key of params.keys()) {
+        if (keys.has(key)) return true;
+        keys.add(key);
+    }
+    return false;
 }
 
 function validateMaxAge(

@@ -121,6 +121,18 @@ Deno.test("rejects malformed and incorrect hashes", async () => {
     );
 });
 
+Deno.test("rejects duplicate keys in Web App data", async () => {
+    for (const key of ["query_id", "hash"]) {
+        const data = webAppData(WEB_APP_HASH);
+        data.append(key, data.get(key)!);
+        assertEquals(
+            await validateWebAppData(TOKEN, data),
+            false,
+            key,
+        );
+    }
+});
+
 const enc = new TextEncoder();
 const WEB_APP_DATA = enc.encode("WebAppData");
 
@@ -378,6 +390,18 @@ Deno.test("excludes hash from third-party signature verification", async () => {
         await validateWebAppDataThirdParty(THIRD_PARTY_BOT_ID, data),
         true,
     );
+});
+
+Deno.test("rejects duplicate keys in third-party data", async () => {
+    for (const key of ["chat_type", "hash", "signature"]) {
+        const data = thirdPartyInitData();
+        data.append(key, data.get(key)!);
+        assertEquals(
+            await validateWebAppDataThirdParty(THIRD_PARTY_BOT_ID, data),
+            false,
+            key,
+        );
+    }
 });
 
 Deno.test("rejects missing and malformed Ed25519 signatures", async () => {
