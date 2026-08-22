@@ -55,6 +55,9 @@ jobs:
             - name: Lint
               run: deno lint
 
+            - name: Type Check
+              run: deno check
+
     test:
         runs-on: ${{ matrix.os }} # runs a test on Ubuntu, Windows and macOS
 
@@ -82,7 +85,7 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - name: Setup repo
-              uses: actions/checkout@v4
+              uses: actions/checkout@v7
               with:
                   fetch-depth: 0
                   persist-credentials: false
