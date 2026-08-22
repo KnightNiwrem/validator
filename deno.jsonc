@@ -1,12 +1,9 @@
 {
     "lock": false,
     "tasks": {
-        "check": "deno cache --allow-import --check=all src/mod.ts",
-        "test": "deno test --allow-import test",
-        "ok": "deno fmt && deno lint && deno task test && deno task check",
+        "ok": "deno fmt --check && deno lint && deno check && deno test",
         "clean": "git clean -fX out test/cov_profile test/coverage coverage.lcov",
-        "coverage": "deno task clean && deno task test --coverage=./test/cov_profile && deno coverage --lcov --output=./coverage.lcov ./test/cov_profile",
-        "report": "genhtml ./coverage.lcov --output-directory ./test/coverage/ && echo 'Point your browser to test/coverage/index.html to see the test coverage report.'"
+        "coverage": "deno task clean && deno test --coverage=./test/cov_profile && echo 'Point your browser to test/cov_profile/html/index.html to see the test coverage report.'"
     },
     "fmt": {
         "indentWidth": 4,
