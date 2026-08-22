@@ -109,12 +109,7 @@ export async function validateWebAppDataThirdParty(
 }
 
 function hasDuplicateKeys(params: URLSearchParams) {
-    const keys = new Set<string>();
-    for (const key of params.keys()) {
-        if (keys.has(key)) return true;
-        keys.add(key);
-    }
-    return false;
+    return new Set(params.keys()).size !== params.size;
 }
 
 function validateMaxAge(
