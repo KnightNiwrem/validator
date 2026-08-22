@@ -22,7 +22,7 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - name: Setup repo
-              uses: actions/checkout@v4
+              uses: actions/checkout@v7
               with:
                   persist-credentials: false
 
@@ -73,7 +73,7 @@ jobs:
                   deno-version: v2.x
 
             - name: Cache Dependencies
-              run: deno task check
+              run: deno install
 
             - name: Run Tests
               run: deno task test
