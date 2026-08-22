@@ -14,12 +14,17 @@ on:
     pull_request:
         branches: [main]
 
+permissions:
+    contents: read
+
 jobs:
     backport:
         runs-on: ubuntu-latest
         steps:
             - name: Setup repo
               uses: actions/checkout@v4
+              with:
+                  persist-credentials: false
 
             - name: Setup Node
               uses: actions/setup-node@v4
@@ -37,6 +42,8 @@ jobs:
         steps:
             - name: Setup repo
               uses: actions/checkout@v4
+              with:
+                  persist-credentials: false
 
             - uses: denoland/setup-deno@v2
               with:
@@ -58,6 +65,8 @@ jobs:
         steps:
             - name: Setup repo
               uses: actions/checkout@v4
+              with:
+                  persist-credentials: false
 
             - uses: denoland/setup-deno@v2
               with:
@@ -76,6 +85,7 @@ jobs:
               uses: actions/checkout@v4
               with:
                   fetch-depth: 0
+                  persist-credentials: false
 
             - uses: denoland/setup-deno@v2
               with:
@@ -85,6 +95,6 @@ jobs:
               run: deno task coverage
 
             - name: Collect coverage
-              uses: codecov/codecov-action@v1.0.10 # upload the report on Codecov
+              uses: codecov/codecov-action@v7 # upload the report on Codecov
               with:
-                  file: ./coverage.lcov
+                  files: ./coverage.lcov
